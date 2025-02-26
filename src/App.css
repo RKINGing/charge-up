@@ -1,0 +1,28 @@
+.bills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* 卡片之间的间距 */
+    justify-content: flex-start; /* 卡片从左到右排列 */
+  }
+  
+  .bill-card {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    width: calc(33.333% - 20px); /* 每行显示三个卡片，减去间距 */
+    box-sizing: border-box;
+  }
+  
+  @media (max-width: 768px) {
+    .bill-card {
+      width: calc(50% - 20px); /* 屏幕宽度小于768px时，每行显示两个卡片 */
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .bill-card {
+      width: 100%; /* 屏幕宽度小于480px时，每行显示一个卡片 */
+    }
+  }
+  
