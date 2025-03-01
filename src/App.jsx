@@ -8,6 +8,7 @@ export default function App() {
   const [name, setName] = useState("");
 
   const billsDateFilter = () => {
+     // 在此添加根据 day 过滤 bills 的逻辑
     const today = dayjs();
     switch (filter) {
       case "today":
@@ -46,31 +47,34 @@ export default function App() {
 }
 
 function AddBills({ setBills }) {
-  const [type, setType] = useState("");
-  const [typeName, setTypeName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [day, setDay] = useState("");
-  const [desc, setDesc] = useState("");
+
+  const[bill, setBill] = useState({
+    type:"",
+    typeName:"",
+    amount : "",
+    day:  "",
+    desc : "",
+  });
 
   const options = ["收入", "支出"];
   const typeNames = ["购物", "交通", "餐饮", "娱乐", "奖金", "工资"];
 
   const addBills = (e) => {
     e.preventDefault();
-    const newBill = { type, amount, typeName, day, desc };
-    setBills((prevBills) => [...prevBills, newBill]);
-
-    setType("");
-    setAmount("");
-    setTypeName("");
-    setDay("");
-    setDesc("");
+    setBills((prevBills) => [...prevBills, bill]);
+    setBill({
+      type:"",
+      typeName:"",
+      amount : "",
+      day:  "",
+      desc : "",
+    });
   };
 
   return (
     <form onSubmit={addBills}>
       <strong>收入/支出：</strong>
-      <select value={type} onChange={(e) => setType(e.target.value)}>
+      <select value={bill.type} onChange={(e) => setBill((prev)=>({...prev,type:e.target.value}))}>
         <option value="">请选择</option>
         {options.map((option, index) => (
           <option key={index} value={option}>
@@ -80,7 +84,7 @@ function AddBills({ setBills }) {
       </select>
       <p />
       <strong>类型：</strong>
-      <select value={typeName} onChange={(e) => setTypeName(e.target.value)}>
+      <select value={bill.typeName} onChange={(e) => setBill((prev)=>({...prev,typeName:e.target.value}))}>
         <option value="">请选择</option>
         {typeNames.map((typeName, index) => (
           <option key={index} value={typeName}>
@@ -92,21 +96,21 @@ function AddBills({ setBills }) {
       <strong>金额：</strong>
       <input
         type="number"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
+        value={bill.amount}
+        onChange={(e) =>setBill((prev)=>({...prev,amount:e.target.value}))}
       />
       <p />
       <strong>日期：</strong>
       <input
         type="date"
-        value={day}
-        onChange={(e) => setDay(e.target.value)}
+        value={bill.day}
+        onChange={(e) => setBill((prev)=>({...prev,day:e.target.value}))}
       />
       <p />
       <strong>详情：</strong>
       <textarea
-        value={desc}
-        onChange={(e) => setDesc(e.target.value)}
+        value={bill.desc}
+        onChange={(e) => setBill((prev)=>({...prev,desc:e.target.value}))}
       />
       <p />
       <button type="submit">提交</button>
