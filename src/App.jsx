@@ -1,5 +1,4 @@
 import { useState } from "react";
-import './App.css';
 import dayjs from "dayjs";
 
 export default function App() {
@@ -7,30 +6,30 @@ export default function App() {
   const [filter, setFilter] = useState("");
   const [name, setName] = useState("");
 
-  const billsDateFilter = () => {
-     // 在此添加根据 day 过滤 bills 的逻辑
+  const billsFilter = () => {
+    // 在此添加根据 day 过滤 bills 的逻辑
     const today = dayjs();
+    let temp = bills;
     switch (filter) {
       case "today":
-        return bills.filter((bill) => dayjs(bill.day).isSame(today, "day"));
+        temp = bills.filter((bill) => dayjs(bill.day).isSame(today, "day"));
+        break;
       case "month":
-        return bills.filter((bill) => dayjs(bill.day).isSame(today, "month"));
+        temp = bills.filter((bill) => dayjs(bill.day).isSame(today, "month"));
+        break;
       case "year":
-        return bills.filter((bill) => dayjs(bill.day).isSame(today, "year"));
+        temp = bills.filter((bill) => dayjs(bill.day).isSame(today, "year"));
+        break;
       default:
-        return bills;
+        temp = bills;
     }
+      // 在此添加根据 name 过滤 bills 的逻辑
+    if (name) {
+      temp = temp.filter((b) => b.typeName === name);
+    }
+    return temp;
   };
 
-  const billsTypeNameFilter = (filteredBills, name) => {
-    // 在此添加根据 name 过滤 bills 的逻辑
-    if (name === "") {
-      return filteredBills;
-    } else {
-      return filteredBills.filter((bill) => bill.typeName === name);
-    }
-  };
-  
 
   return (
     <>
@@ -41,19 +40,18 @@ export default function App() {
       <hr />
       <BillsTypeNameFilter setName={setName} />
       <hr />
-      <Bills bills={billsTypeNameFilter(billsDateFilter(), name)} />
+      <Bills bills={billsFilter()} />
     </>
   );
 }
 
 function AddBills({ setBills }) {
-
-  const[bill, setBill] = useState({
-    type:"",
-    typeName:"",
-    amount : "",
-    day:  "",
-    desc : "",
+  const [bill, setBill] = useState({
+    type: "",
+    typeName: "",
+    amount: "",
+    day: "",
+    desc: "",
   });
 
   const options = ["收入", "支出"];
@@ -63,18 +61,21 @@ function AddBills({ setBills }) {
     e.preventDefault();
     setBills((prevBills) => [...prevBills, bill]);
     setBill({
-      type:"",
-      typeName:"",
-      amount : "",
-      day:  "",
-      desc : "",
+      type: "",
+      typeName: "",
+      amount: "",
+      day: "",
+      desc: "",
     });
   };
 
   return (
     <form onSubmit={addBills}>
       <strong>收入/支出：</strong>
-      <select value={bill.type} onChange={(e) => setBill((prev)=>({...prev,type:e.target.value}))}>
+      <select
+        value={bill.type}
+        onChange={(e) => setBill((prev) => ({ ...prev, type: e.target.value }))}
+      >
         <option value="">请选择</option>
         {options.map((option, index) => (
           <option key={index} value={option}>
@@ -84,7 +85,12 @@ function AddBills({ setBills }) {
       </select>
       <p />
       <strong>类型：</strong>
-      <select value={bill.typeName} onChange={(e) => setBill((prev)=>({...prev,typeName:e.target.value}))}>
+      <select
+        value={bill.typeName}
+        onChange={(e) =>
+          setBill((prev) => ({ ...prev, typeName: e.target.value }))
+        }
+      >
         <option value="">请选择</option>
         {typeNames.map((typeName, index) => (
           <option key={index} value={typeName}>
@@ -97,20 +103,22 @@ function AddBills({ setBills }) {
       <input
         type="number"
         value={bill.amount}
-        onChange={(e) =>setBill((prev)=>({...prev,amount:e.target.value}))}
+        onChange={(e) =>
+          setBill((prev) => ({ ...prev, amount: e.target.value }))
+        }
       />
       <p />
       <strong>日期：</strong>
       <input
         type="date"
         value={bill.day}
-        onChange={(e) => setBill((prev)=>({...prev,day:e.target.value}))}
+        onChange={(e) => setBill((prev) => ({ ...prev, day: e.target.value }))}
       />
       <p />
       <strong>详情：</strong>
       <textarea
         value={bill.desc}
-        onChange={(e) => setBill((prev)=>({...prev,desc:e.target.value}))}
+        onChange={(e) => setBill((prev) => ({ ...prev, desc: e.target.value }))}
       />
       <p />
       <button type="submit">提交</button>
@@ -144,6 +152,10 @@ function BillsDateFilter({ setFilter }) {
           onChange={() => setFilter("year")}
         />
         今年
+      </label>
+      <label>
+        <input type="radio" name="filter" onChange={() => setFilter("")} />
+        全部
       </label>
     </div>
   );
@@ -206,7 +218,7 @@ function BillsTypeNameFilter({ setName }) {
           name="typeName"
           onChange={() => setName("")}
         />
-        全部        
+        全部
       </label>
     </div>
   );
@@ -217,11 +229,26 @@ function Bills({ bills }) {
     <div className="bills-container">
       {bills.map((bill, index) => (
         <div className="bill-card" key={index}>
-          <p><strong>收入/支出：</strong>{bill.type}</p>
-          <p><strong>类型：</strong>{bill.typeName}</p>
-          <p><strong>金额：</strong>{bill.amount}</p>
-          <p><strong>日期：</strong>{bill.day}</p>
-          <p><strong>详情：</strong>{bill.desc}</p>
+          <p>
+            <strong>收入/支出：</strong>
+            {bill.type}
+          </p>
+          <p>
+            <strong>类型：</strong>
+            {bill.typeName}
+          </p>
+          <p>
+            <strong>金额：</strong>
+            {bill.amount}
+          </p>
+          <p>
+            <strong>日期：</strong>
+            {bill.day}
+          </p>
+          <p>
+            <strong>详情：</strong>
+            {bill.desc}
+          </p>
         </div>
       ))}
     </div>
