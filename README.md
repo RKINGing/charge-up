@@ -1,4 +1,4 @@
-# React + Vite+tialdwindcss+daisyui
+# React + Vite+Tailwindcss+daisyui
 ## 简易实现记账本
 ### 实现功能
 - 实现记账本的基本功能，包括添加、展示
