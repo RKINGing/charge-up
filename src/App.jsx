@@ -1,5 +1,6 @@
 import { useState } from "react";
 import dayjs from "dayjs";
+import Navbar from "./components/Navbar";
 
 export default function App() {
   const [bills, setBills] = useState([]);
@@ -33,7 +34,7 @@ export default function App() {
 
   return (
     <>
-      <h1>记账本</h1>
+      <Navbar></Navbar>
       <AddBills setBills={setBills} />
       <hr />
       <BillsDateFilter setFilter={setFilter} />
@@ -70,22 +71,24 @@ function AddBills({ setBills }) {
   };
 
   return (
-    <form onSubmit={addBills}>
-      <strong>收入/支出：</strong>
-      <select
+    <form onSubmit={addBills} style={{ display: 'grid', gap: '15px' }}>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <strong style={{ width: '100px', textAlign: 'right' }}>收入/支出：</strong>
+    <select  className="select select-accent"
         value={bill.type}
         onChange={(e) => setBill((prev) => ({ ...prev, type: e.target.value }))}
       >
-        <option value="">请选择</option>
+        <option  disabled={true} value="">请选择</option>
         {options.map((option, index) => (
           <option key={index} value={option}>
             {option}
           </option>
         ))}
       </select>
-      <p />
-      <strong>类型：</strong>
-      <select
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <strong style={{ width: '100px', textAlign: 'right' }}>类型：</strong>
+    <select className="select select-success"
         value={bill.typeName}
         onChange={(e) =>
           setBill((prev) => ({ ...prev, typeName: e.target.value }))
@@ -98,48 +101,62 @@ function AddBills({ setBills }) {
           </option>
         ))}
       </select>
-      <p />
-      <strong>金额：</strong>
-      <input
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <strong style={{ width: '100px', textAlign: 'right' }}>金额：</strong>
+    <input
         type="number"
+        placeholder="Number"
+        class="input input-accent" 
         value={bill.amount}
         onChange={(e) =>
           setBill((prev) => ({ ...prev, amount: e.target.value }))
         }
       />
       <p />
-      <strong>日期：</strong>
-      <input
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <strong style={{ width: '100px', textAlign: 'right' }}>日期：</strong>
+    <input
         type="date"
+        className="input input-accent"
         value={bill.day}
         onChange={(e) => setBill((prev) => ({ ...prev, day: e.target.value }))}
       />
-      <p />
-      <strong>详情：</strong>
-      <textarea
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <strong style={{ width: '100px', textAlign: 'right' }}>详情：</strong>
+    <textarea
+      type="text" placeholder="...  " className="textarea textarea-success"
         value={bill.desc}
         onChange={(e) => setBill((prev) => ({ ...prev, desc: e.target.value }))}
       />
-      <p />
-      <button type="submit">提交</button>
-    </form>
+  </div>
+  <button 
+  className="btn btn-success" 
+  style={{ width: '150px' }}  // 根据需要调整数值
+>
+  提交
+</button>
+</form>
   );
 }
+
+
 
 function BillsDateFilter({ setFilter }) {
   return (
     <div>
       <label>
         <input
-          type="radio"
-          name="filter"
+         type="radio"name="filter" className="radio radio-accent"
           onChange={() => setFilter("today")}
         />
         今日
       </label>
       <label>
         <input
-          type="radio"
+        type="radio" className="radio radio-accent"
           name="filter"
           onChange={() => setFilter("month")}
         />
@@ -147,14 +164,15 @@ function BillsDateFilter({ setFilter }) {
       </label>
       <label>
         <input
-          type="radio"
+       type="radio" className="radio radio-accent"
           name="filter"
           onChange={() => setFilter("year")}
         />
         今年
       </label>
       <label>
-        <input type="radio" name="filter" onChange={() => setFilter("")} />
+        <input   type="radio" className="radio radio-accent"
+          name="filter"onChange={() => setFilter("")} />
         全部
       </label>
     </div>
@@ -166,7 +184,7 @@ function BillsTypeNameFilter({ setName }) {
     <div>
       <label>
         <input
-          type="radio"
+       type="radio" className="radio radio-accent"
           name="typeName"
           onChange={() => setName("购物")}
         />
@@ -174,7 +192,7 @@ function BillsTypeNameFilter({ setName }) {
       </label>
       <label>
         <input
-          type="radio"
+          type="radio" className="radio radio-accent"
           name="typeName"
           onChange={() => setName("交通")}
         />
@@ -182,7 +200,7 @@ function BillsTypeNameFilter({ setName }) {
       </label>
       <label>
         <input
-          type="radio"
+       type="radio" className="radio radio-accent"
           name="typeName"
           onChange={() => setName("餐饮")}
         />
@@ -190,7 +208,7 @@ function BillsTypeNameFilter({ setName }) {
       </label>
       <label>
         <input
-          type="radio"
+          type="radio" className="radio radio-accent"
           name="typeName"
           onChange={() => setName("娱乐")}
         />
@@ -198,7 +216,7 @@ function BillsTypeNameFilter({ setName }) {
       </label>
       <label>
         <input
-          type="radio"
+          type="radio" className="radio radio-accent"
           name="typeName"
           onChange={() => setName("奖金")}
         />
@@ -206,7 +224,7 @@ function BillsTypeNameFilter({ setName }) {
       </label>
       <label>
         <input
-          type="radio"
+         type="radio" className="radio radio-accent"
           name="typeName"
           onChange={() => setName("工资")}
         />
@@ -214,7 +232,7 @@ function BillsTypeNameFilter({ setName }) {
       </label>
       <label>
         <input
-          type="radio"
+         type="radio" className="radio radio-accent"
           name="typeName"
           onChange={() => setName("")}
         />
@@ -226,9 +244,24 @@ function BillsTypeNameFilter({ setName }) {
 
 function Bills({ bills }) {
   return (
-    <div className="bills-container">
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
       {bills.map((bill, index) => (
-        <div className="bill-card" key={index}>
+        <div
+          key={index}
+          style={{
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            padding: '16px',
+            width: '300px',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            transition: 'box-shadow 0.3s ease',
+            '&:hover': {
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+            },
+            // 添加背景颜色为浅绿色 
+            backgroundColor: 'rgb(0,211,144)', 
+          }}
+        >
           <p>
             <strong>收入/支出：</strong>
             {bill.type}
