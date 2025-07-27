@@ -1,289 +1,403 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import Navbar from "./components/Navbar";
 
 export default function App() {
-  const [bills, setBills] = useState([]);
+  // 从本地存储加载账单数据
+  const [bills, setBills] = useState(() => {
+    const savedBills = localStorage.getItem("bills");
+    return savedBills ? JSON.parse(savedBills) : [];
+  });
+  
   const [filter, setFilter] = useState("");
   const [name, setName] = useState("");
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("theme") || "light";
+  });
 
+  // 保存账单到本地存储
+  useEffect(() => {
+    localStorage.setItem("bills", JSON.stringify(bills));
+  }, [bills]);
+
+  // 切换主题
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+  };
+
+  // 应用主题
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  // 账单过滤逻辑
   const billsFilter = () => {
-    // 在此添加根据 day 过滤 bills 的逻辑
     const today = dayjs();
-    let temp = bills;
+    let temp = [...bills];
+    
+    // 日期过滤
     switch (filter) {
       case "today":
-        temp = bills.filter((bill) => dayjs(bill.day).isSame(today, "day"));
+        temp = temp.filter((bill) => dayjs(bill.day).isSame(today, "day"));
         break;
       case "month":
-        temp = bills.filter((bill) => dayjs(bill.day).isSame(today, "month"));
+        temp = temp.filter((bill) => dayjs(bill.day).isSame(today, "month"));
         break;
       case "year":
-        temp = bills.filter((bill) => dayjs(bill.day).isSame(today, "year"));
+        temp = temp.filter((bill) => dayjs(bill.day).isSame(today, "year"));
         break;
       default:
-        temp = bills;
+        break;
     }
-      // 在此添加根据 name 过滤 bills 的逻辑
+    
+    // 类型过滤
     if (name) {
       temp = temp.filter((b) => b.typeName === name);
     }
+    
     return temp;
   };
 
+  // 删除账单
+  const deleteBill = (index) => {
+    setBills(bills.filter((_, i) => i !== index));
+  };
 
-  return (
-    <>
-      <Navbar></Navbar>
-      <AddBills setBills={setBills} />
-      <hr />
-      <BillsDateFilter setFilter={setFilter} />
-      <hr />
-      <BillsTypeNameFilter setName={setName} />
-      <hr />
-      <Bills bills={billsFilter()} />
-    </>
-  );
-}
+  // 开始编辑账单
+  const startEditing = (index, bill) => {
+    setEditingIndex(index);
+    setBillForm(bill);
+  };
 
-function AddBills({ setBills }) {
-  const [bill, setBill] = useState({
+  // 取消编辑
+  const cancelEditing = () => {
+    setEditingIndex(null);
+    resetBillForm();
+  };
+
+  // 账单表单状态
+  const [billForm, setBillForm] = useState({
     type: "",
     typeName: "",
     amount: "",
-    day: "",
+    day: dayjs().format("YYYY-MM-DD"),
     desc: "",
   });
 
-  const options = ["收入", "支出"];
-  const typeNames = ["购物", "交通", "餐饮", "娱乐", "奖金", "工资"];
-
-  const addBills = (e) => {
-    e.preventDefault();
-    setBills((prevBills) => [...prevBills, bill]);
-    setBill({
+  // 重置表单
+  const resetBillForm = () => {
+    setBillForm({
       type: "",
       typeName: "",
       amount: "",
-      day: "",
+      day: dayjs().format("YYYY-MM-DD"),
       desc: "",
     });
   };
 
+  // 添加/更新账单
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (editingIndex !== null) {
+      // 更新现有账单
+      const updatedBills = [...bills];
+      updatedBills[editingIndex] = billForm;
+      setBills(updatedBills);
+      setEditingIndex(null);
+    } else {
+      // 添加新账单
+      setBills([...bills, billForm]);
+    }
+    
+    resetBillForm();
+  };
+
   return (
-    <form onSubmit={addBills} style={{ display: 'grid', gap: '15px' }}>
-  <div style={{ display: 'flex', alignItems: 'center' }}>
-    <strong style={{ width: '100px', textAlign: 'right' }}>收入/支出：</strong>
-    <select  className="select select-accent"
-        value={bill.type}
-        onChange={(e) => setBill((prev) => ({ ...prev, type: e.target.value }))}
-      >
-        <option  disabled={true} value="">请选择</option>
-        {options.map((option, index) => (
-          <option key={index} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-  </div>
-  <div style={{ display: 'flex', alignItems: 'center' }}>
-    <strong style={{ width: '100px', textAlign: 'right' }}>类型：</strong>
-    <select className="select select-success"
-        value={bill.typeName}
-        onChange={(e) =>
-          setBill((prev) => ({ ...prev, typeName: e.target.value }))
-        }
-      >
-        <option value="">请选择</option>
-        {typeNames.map((typeName, index) => (
-          <option key={index} value={typeName}>
-            {typeName}
-          </option>
-        ))}
-      </select>
-  </div>
-  <div style={{ display: 'flex', alignItems: 'center' }}>
-    <strong style={{ width: '100px', textAlign: 'right' }}>金额：</strong>
-    <input
-        type="number"
-        placeholder="Number"
-        class="input input-accent" 
-        value={bill.amount}
-        onChange={(e) =>
-          setBill((prev) => ({ ...prev, amount: e.target.value }))
-        }
-      />
-      <p />
-  </div>
-  <div style={{ display: 'flex', alignItems: 'center' }}>
-    <strong style={{ width: '100px', textAlign: 'right' }}>日期：</strong>
-    <input
-        type="date"
-        className="input input-accent"
-        value={bill.day}
-        onChange={(e) => setBill((prev) => ({ ...prev, day: e.target.value }))}
-      />
-  </div>
-  <div style={{ display: 'flex', alignItems: 'center' }}>
-    <strong style={{ width: '100px', textAlign: 'right' }}>详情：</strong>
-    <textarea
-      type="text" placeholder="...  " className="textarea textarea-success"
-        value={bill.desc}
-        onChange={(e) => setBill((prev) => ({ ...prev, desc: e.target.value }))}
-      />
-  </div>
-  <button 
-  className="btn btn-success" 
-  style={{ width: '150px' }}  // 根据需要调整数值
->
-  提交
-</button>
-</form>
-  );
-}
-
-
-
-function BillsDateFilter({ setFilter }) {
-  return (
-    <div>
-      <label>
-        <input
-         type="radio"name="filter" className="radio radio-accent"
-          onChange={() => setFilter("today")}
+    <div className="min-h-screen bg-base-100">
+      <Navbar toggleTheme={toggleTheme} theme={theme} />
+      <div className="container mx-auto p-4">
+        <AddBills 
+          billForm={billForm} 
+          setBillForm={setBillForm} 
+          handleSubmit={handleSubmit}
+          editingIndex={editingIndex}
+          cancelEditing={cancelEditing}
         />
-        今日
-      </label>
-      <label>
-        <input
-        type="radio" className="radio radio-accent"
-          name="filter"
-          onChange={() => setFilter("month")}
-        />
-        本月
-      </label>
-      <label>
-        <input
-       type="radio" className="radio radio-accent"
-          name="filter"
-          onChange={() => setFilter("year")}
-        />
-        今年
-      </label>
-      <label>
-        <input   type="radio" className="radio radio-accent"
-          name="filter"onChange={() => setFilter("")} />
-        全部
-      </label>
-    </div>
-  );
-}
-
-function BillsTypeNameFilter({ setName }) {
-  return (
-    <div>
-      <label>
-        <input
-       type="radio" className="radio radio-accent"
-          name="typeName"
-          onChange={() => setName("购物")}
-        />
-        购物
-      </label>
-      <label>
-        <input
-          type="radio" className="radio radio-accent"
-          name="typeName"
-          onChange={() => setName("交通")}
-        />
-        交通
-      </label>
-      <label>
-        <input
-       type="radio" className="radio radio-accent"
-          name="typeName"
-          onChange={() => setName("餐饮")}
-        />
-        餐饮
-      </label>
-      <label>
-        <input
-          type="radio" className="radio radio-accent"
-          name="typeName"
-          onChange={() => setName("娱乐")}
-        />
-        娱乐
-      </label>
-      <label>
-        <input
-          type="radio" className="radio radio-accent"
-          name="typeName"
-          onChange={() => setName("奖金")}
-        />
-        奖金
-      </label>
-      <label>
-        <input
-         type="radio" className="radio radio-accent"
-          name="typeName"
-          onChange={() => setName("工资")}
-        />
-        工资
-      </label>
-      <label>
-        <input
-         type="radio" className="radio radio-accent"
-          name="typeName"
-          onChange={() => setName("")}
-        />
-        全部
-      </label>
-    </div>
-  );
-}
-
-function Bills({ bills }) {
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-      {bills.map((bill, index) => (
-        <div
-          key={index}
-          style={{
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            padding: '16px',
-            width: '300px',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-            transition: 'box-shadow 0.3s ease',
-            '&:hover': {
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-            },
-            // 添加背景颜色为浅绿色 
-            backgroundColor: 'rgb(0,211,144)', 
-          }}
-        >
-          <p>
-            <strong>收入/支出：</strong>
-            {bill.type}
-          </p>
-          <p>
-            <strong>类型：</strong>
-            {bill.typeName}
-          </p>
-          <p>
-            <strong>金额：</strong>
-            {bill.amount}
-          </p>
-          <p>
-            <strong>日期：</strong>
-            {bill.day}
-          </p>
-          <p>
-            <strong>详情：</strong>
-            {bill.desc}
-          </p>
+        
+        <div className="divider"></div>
+        
+        <div className="flex flex-wrap gap-4 mb-6">
+          <BillsDateFilter setFilter={setFilter} currentFilter={filter} />
+          <BillsTypeNameFilter setName={setName} currentName={name} />
         </div>
-      ))}
+        
+        <div className="divider"></div>
+        
+        <Bills 
+          bills={billsFilter()} 
+          deleteBill={deleteBill} 
+          startEditing={startEditing} 
+        />
+      </div>
+    </div>
+  );
+}
+
+function AddBills({ billForm, setBillForm, handleSubmit, editingIndex, cancelEditing }) {
+  const options = ["收入", "支出"];
+  const typeNames = ["购物", "交通", "餐饮", "娱乐", "奖金", "工资"];
+
+  return (
+    <div className="card bg-base-200 shadow-xl p-6 mb-6">
+      <h2 className="text-2xl font-bold mb-4">
+        {editingIndex !== null ? "编辑账单" : "添加新账单"}
+      </h2>
+      
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-bold">收入/支出</span>
+          </label>
+          <select
+            className="select select-bordered select-primary"
+            value={billForm.type}
+            onChange={(e) => setBillForm(prev => ({ ...prev, type: e.target.value }))}
+            required
+          >
+            <option disabled value="">请选择</option>
+            {options.map((option, index) => (
+              <option key={index} value={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-bold">类型</span>
+          </label>
+          <select
+            className="select select-bordered select-success"
+            value={billForm.typeName}
+            onChange={(e) => setBillForm(prev => ({ ...prev, typeName: e.target.value }))}
+            required
+          >
+            <option value="">请选择</option>
+            {typeNames.map((typeName, index) => (
+              <option key={index} value={typeName}>{typeName}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-bold">金额</span>
+          </label>
+          <input
+            type="number"
+            placeholder="输入金额"
+            className="input input-bordered input-primary"
+            value={billForm.amount}
+            onChange={(e) => setBillForm(prev => ({ ...prev, amount: e.target.value }))}
+            required
+            min="0"
+            step="0.01"
+          />
+        </div>
+        
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-bold">日期</span>
+          </label>
+          <input
+            type="date"
+            className="input input-bordered input-primary"
+            value={billForm.day}
+            onChange={(e) => setBillForm(prev => ({ ...prev, day: e.target.value }))}
+            required
+          />
+        </div>
+        
+        <div className="form-control md:col-span-2">
+          <label className="label">
+            <span className="label-text font-bold">详情</span>
+          </label>
+          <textarea
+            placeholder="账单详情..."
+            className="textarea textarea-bordered textarea-success h-24"
+            value={billForm.desc}
+            onChange={(e) => setBillForm(prev => ({ ...prev, desc: e.target.value }))}
+          />
+        </div>
+        
+        <div className="md:col-span-2 flex gap-3 mt-2">
+          {editingIndex !== null ? (
+            <>
+              <button type="button" className="btn btn-error flex-1" onClick={cancelEditing}>
+                取消编辑
+              </button>
+              <button type="submit" className="btn btn-success flex-1">
+                更新账单
+              </button>
+            </>
+          ) : (
+            <button type="submit" className="btn btn-success w-full">
+              添加账单
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function BillsDateFilter({ setFilter, currentFilter }) {
+  const filters = [
+    { value: "today", label: "今日" },
+    { value: "month", label: "本月" },
+    { value: "year", label: "今年" },
+    { value: "", label: "全部" }
+  ];
+
+  return (
+    <div className="card bg-base-200 p-4 w-full md:w-auto">
+      <h3 className="font-bold mb-2">日期筛选</h3>
+      <div className="flex flex-wrap gap-2">
+        {filters.map((filter, index) => (
+          <button
+            key={index}
+            className={`btn btn-sm ${currentFilter === filter.value ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setFilter(filter.value)}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BillsTypeNameFilter({ setName, currentName }) {
+  const typeNames = ["购物", "交通", "餐饮", "娱乐", "奖金", "工资", ""];
+  const labels = {
+    "": "全部",
+    "购物": "购物",
+    "交通": "交通",
+    "餐饮": "餐饮",
+    "娱乐": "娱乐",
+    "奖金": "奖金",
+    "工资": "工资"
+  };
+
+  return (
+    <div className="card bg-base-200 p-4 w-full md:w-auto">
+      <h3 className="font-bold mb-2">类型筛选</h3>
+      <div className="flex flex-wrap gap-2">
+        {typeNames.map((name, index) => (
+          <button
+            key={index}
+            className={`btn btn-sm ${currentName === name ? 'btn-accent' : 'btn-outline'}`}
+            onClick={() => setName(name)}
+          >
+            {labels[name]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Bills({ bills, deleteBill, startEditing }) {
+  if (bills.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-5xl mb-4">📝</div>
+        <h3 className="text-xl font-bold">暂无账单记录</h3>
+        <p className="text-gray-500">请添加新的账单记录</p>
+      </div>
+    );
+  }
+
+  // 计算总收入与总支出
+  const totalIncome = bills
+    .filter(bill => bill.type === "收入")
+    .reduce((sum, bill) => sum + parseFloat(bill.amount || 0), 0);
+  
+  const totalExpense = bills
+    .filter(bill => bill.type === "支出")
+    .reduce((sum, bill) => sum + parseFloat(bill.amount || 0), 0);
+  
+  const balance = totalIncome - totalExpense;
+
+  return (
+    <div>
+      <div className="stats shadow mb-6 w-full">
+        <div className="stat">
+          <div className="stat-title">总收入</div>
+          <div className="stat-value text-success">¥{totalIncome.toFixed(2)}</div>
+        </div>
+        
+        <div className="stat">
+          <div className="stat-title">总支出</div>
+          <div className="stat-value text-error">¥{totalExpense.toFixed(2)}</div>
+        </div>
+        
+        <div className="stat">
+          <div className="stat-title">结余</div>
+          <div className={`stat-value ${balance >= 0 ? 'text-success' : 'text-error'}`}>
+            ¥{balance.toFixed(2)}
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {bills.map((bill, index) => (
+          <div key={index} className="card bg-base-100 shadow-lg">
+            <div className={`card-body ${bill.type === "收入" ? 'bg-success/10' : 'bg-error/10'}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className={`card-title ${bill.type === "收入" ? 'text-success' : 'text-error'}`}>
+                    {bill.typeName}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {dayjs(bill.day).format("YYYY-MM-DD")}
+                  </p>
+                </div>
+                <div className="badge badge-lg badge-outline">
+                  {bill.type}
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <p className="text-2xl font-bold">
+                  ¥{parseFloat(bill.amount).toFixed(2)}
+                </p>
+                <p className="mt-2">
+                  {bill.desc || "暂无描述"}
+                </p>
+              </div>
+              
+              <div className="card-actions justify-end mt-4">
+                <button 
+                  className="btn btn-sm btn-outline btn-primary"
+                  onClick={() => startEditing(index, bill)}
+                >
+                  编辑
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline btn-error"
+                  onClick={() => deleteBill(index)}
+                >
+                  删除
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
